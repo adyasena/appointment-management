@@ -37,49 +37,33 @@ export default function Navbar() {
           ☰
         </button>
 
-        <ul
+        <div
           className={`md:flex md:gap-6 absolute md:static bg-blue-600 w-full md:w-auto left-0 top-16 md:top-0 transition-all ${
             isOpen ? "block" : "hidden"
           } md:flex`}
         >
           {isLoggedIn ? (
-            <>
-              <li>
-                <Link
-                  href="/dashboard"
-                  className="block p-3 md:inline md:p-0 hover:underline"
-                >
-                  Dashboard
-                </Link>
-              </li>
-              <li>
-                <button
-                  className="block p-3 md:inline md:p-0 hover:underline"
-                  onClick={() => {
-                    localStorage.removeItem("token");
-                    setIsLoggedIn(false);
-                    window.location.href = "/login";
-                  }}
-                >
-                  Logout
-                </button>
-              </li>
-            </>
+            <button
+              className="block p-3 md:inline md:p-0 hover:underline"
+              onClick={() => {
+                localStorage.removeItem("token");
+                setIsLoggedIn(false);
+                window.location.href = "/";
+              }}
+            >
+              Logout
+            </button>
           ) : (
-            <>
-              <li>
-                <Link
-                  href="https://github.com/adyasena"
-                  className="block p-3 md:inline md:p-0 hover:underline"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Github
-                </Link>
-              </li>
-            </>
+            <Link
+              href="https://github.com/adyasena"
+              className="block p-3 md:inline md:p-0 hover:underline"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Github
+            </Link>
           )}
-        </ul>
+        </div>
       </div>
     </nav>
   );
