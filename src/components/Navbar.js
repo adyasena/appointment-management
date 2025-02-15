@@ -23,7 +23,6 @@ export default function Navbar() {
             alt="Logo"
             width={30}
             height={30}
-            className="invert"
           />
           <span className="hidden md:block">
             User Appointment Management System
