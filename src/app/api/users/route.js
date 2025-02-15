@@ -6,7 +6,7 @@ export async function GET() {
   try {
     await connectToDatabase();
 
-    const users = await User.find().select("id username name");
+    const users = await User.find().select("id username name preferred_timezone");
 
     return NextResponse.json({ users }, { status: 200 });
   } catch (error) {

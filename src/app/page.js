@@ -89,7 +89,7 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="flex items-center justify-center h-full p-8">
+    <div className="flex items-center justify-center h-full py-8">
       <main className="flex flex-col gap-8 items-center w-full max-w-md">
         <h1 className="text-3xl font-bold text-center">
           {isRegister ? "Register" : "Login"}

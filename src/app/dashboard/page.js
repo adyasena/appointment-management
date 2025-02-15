@@ -1,12 +1,14 @@
 "use client";
 import { useState, useEffect } from "react";
 import Select from "react-select";
+import { DateTime } from "luxon";
 
 export default function Dashboard() {
   const [appointments, setAppointments] = useState([]);
   const [users, setUsers] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loggedInUser, setLoggedInUser] = useState(null);
+  const [loggedInUserTimezone, setLoggedInUserTimezone] = useState(null);
   const [newAppointment, setNewAppointment] = useState({
     title: "",
     start: "",
@@ -68,8 +70,11 @@ export default function Dashboard() {
         const res = await fetch("/api/users");
         if (!res.ok) throw new Error("Failed to fetch users");
 
-        const data = await res.json();
-        setUsers(data.users);
+        const { users } = await res.json();
+        setUsers(users);
+
+        const user = users.find((u) => String(u._id) === String(loggedInUser));
+        setLoggedInUserTimezone(user?.preferred_timezone || "UTC");
       } catch (error) {
         alert(error.message);
       }
@@ -164,8 +169,15 @@ export default function Dashboard() {
     }
   };
 
+  const convertToUserTimezone = (utcTime, format = "yyyy-MM-dd HH:mm") => {
+    if (!loggedInUserTimezone) return utcTime;
+    return DateTime.fromISO(utcTime, { zone: "utc" })
+      .setZone(loggedInUserTimezone)
+      .toFormat(format);
+  };
+
   return (
-    <div className="max-w-4xl mx-auto p-6">
+    <div className="mx-auto">
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">Appointments</h1>
         <button
@@ -175,45 +187,50 @@ export default function Dashboard() {
           Add Appointment
         </button>
       </div>
-      <table className="w-full border-collapse border border-gray-300">
+      <table className="w-full border-collapse border border-gray-300 table-fixed">
         <thead>
           <tr className="bg-gray-200">
-            <th className="border border-gray-300 p-2">Title</th>
-            <th className="border border-gray-300 p-2">Creator</th>
-            <th className="border border-gray-300 p-2">Participants</th>
-            <th className="border border-gray-300 p-2">Start</th>
-            <th className="border border-gray-300 p-2">End</th>
+            <th className="border border-gray-300 p-2 w-2/6">Title</th>
+            <th className="border border-gray-300 p-2 w-1/6">Creator</th>
+            <th className="border border-gray-300 p-2 w-1/6">Participants</th>
+            <th className="border border-gray-300 p-2 w-2/6">Time</th>
           </tr>
         </thead>
-
         <tbody>
           {appointments.length > 0 ? (
-            appointments.map((appointment) => (
-              <tr key={appointment._id} className="hover:bg-gray-100">
-                <td className="border border-gray-300 p-2">
-                  {appointment.title}
-                </td>
-                <td className="border border-gray-300 p-2">
-                  {appointment.creator_id?.name || "Unknown"}
-                </td>
+            appointments.map((appointment) => {
+              const date = convertToUserTimezone(
+                appointment.start,
+                "d MMMM yyyy"
+              );
+              const startTime = convertToUserTimezone(
+                appointment.start,
+                "HH:mm"
+              );
+              const endTime = convertToUserTimezone(appointment.end, "HH:mm");
 
-                <td className="border border-gray-300 p-2">
-                  {appointment.participants?.map((p) => p.name).join(", ") ||
-                    "None"}
-                </td>
-
-                <td className="border border-gray-300 p-2">
-                  {new Date(appointment.start).toLocaleString()}
-                </td>
-                <td className="border border-gray-300 p-2">
-                  {new Date(appointment.end).toLocaleString()}
-                </td>
-              </tr>
-            ))
+              return (
+                <tr key={appointment._id} className="hover:bg-gray-100">
+                  <td className="border border-gray-300 p-2">
+                    {appointment.title}
+                  </td>
+                  <td className="border border-gray-300 p-2">
+                    {appointment.creator_id?.name || "Unknown"}
+                  </td>
+                  <td className="border border-gray-300 p-2">
+                    {appointment.participants?.map((p) => p.name).join(", ") ||
+                      "None"}
+                  </td>
+                  <td className="border border-gray-300 p-2">
+                    {`${date}, ${startTime} - ${endTime}`}
+                  </td>
+                </tr>
+              );
+            })
           ) : (
             <tr>
               <td
-                colSpan="5"
+                colSpan="4"
                 className="border border-gray-300 p-4 text-center"
               >
                 No appointments found.

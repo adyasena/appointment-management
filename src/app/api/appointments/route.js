@@ -1,7 +1,9 @@
 import mongoose from "mongoose";
 import { NextResponse } from "next/server";
+import { DateTime } from "luxon";
 import { connectToDatabase } from "@/lib/mongodb";
 import Appointment from "@/models/Appointment";
+import User from "@/models/User";
 
 export async function GET(req) {
   try {
@@ -38,7 +40,6 @@ export async function GET(req) {
 export async function POST(req) {
   try {
     await connectToDatabase();
-
     const body = await req.json();
 
     if (!body.title || !body.start || !body.end || !body.creator_id) {
@@ -51,6 +52,23 @@ export async function POST(req) {
     const creatorId = mongoose.Types.ObjectId.createFromHexString(
       body.creator_id
     );
+
+    const creator = await User.findById(creatorId).select("preferred_timezone");
+
+    if (!creator || !creator.preferred_timezone) {
+      return NextResponse.json(
+        { message: "Creator not found or missing preferred timezone" },
+        { status: 404 }
+      );
+    }
+
+    const startInUTC = DateTime.fromISO(body.start)
+      .setZone(creator.preferred_timezone)
+      .toUTC();
+    const endInUTC = DateTime.fromISO(body.end)
+      .setZone(creator.preferred_timezone)
+      .toUTC();
+
     const participants = body.participants
       ? body.participants.map((id) =>
           mongoose.Types.ObjectId.createFromHexString(id)
@@ -59,8 +77,8 @@ export async function POST(req) {
 
     const newAppointment = await Appointment.create({
       title: body.title,
-      start: body.start,
-      end: body.end,
+      start: startInUTC.toISO(),
+      end: endInUTC.toISO(),
       creator_id: creatorId,
       participants,
     });

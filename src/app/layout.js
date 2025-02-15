@@ -24,7 +24,7 @@ export default function RootLayout({ children }) {
         className={`${geistSans.variable} ${geistMono.variable} h-full flex flex-col`}
       >
         <Navbar />
-        <main className="flex-grow p-6">{children}</main>
+        <main className="flex-grow py-6 px-16">{children}</main>
       </body>
     </html>
   );
