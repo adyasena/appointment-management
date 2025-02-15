@@ -8,12 +8,6 @@ export async function POST(req) {
     const { name, username, password, preferred_timezone } = await req.json();
 
     if (!name || !username || !password || !preferred_timezone) {
-      console.log("Missing fields:", {
-        username,
-        name,
-        preferred_timezone,
-        password,
-      });
       return NextResponse.json(
         { message: "All fields are required" },
         { status: 400 }
@@ -24,7 +18,6 @@ export async function POST(req) {
 
     const existingUser = await User.findOne({ username });
     if (existingUser) {
-      console.log("Username already exists:", username);
       return NextResponse.json(
         { message: "Username already taken" },
         { status: 400 }
@@ -41,7 +34,6 @@ export async function POST(req) {
     });
     await newUser.save();
 
-    console.log("User registered:", username);
     return NextResponse.json(
       { message: "Registration successful" },
       { status: 201 }

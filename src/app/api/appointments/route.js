@@ -52,24 +52,100 @@ export async function POST(req) {
     const creatorId = mongoose.Types.ObjectId.createFromHexString(
       body.creator_id
     );
-
-    const creator = await User.findById(creatorId).select("preferred_timezone");
+    const creator = await User.findById(creatorId).select(
+      "preferred_timezone name"
+    );
 
     if (!creator || !creator.preferred_timezone) {
       return NextResponse.json(
-        { message: "Creator not found or missing preferred timezone" },
+        {
+          message: `Creator ${
+            creator?.name || "Unknown"
+          } not found or missing preferred timezone`,
+        },
         { status: 404 }
       );
     }
 
-    const startInUTC = DateTime.fromISO(body.start)
-      .setZone(creator.preferred_timezone)
-      .toUTC();
-    const endInUTC = DateTime.fromISO(body.end)
-      .setZone(creator.preferred_timezone)
-      .toUTC();
+    console.log(
+      `Creator: ${creator.name}, Timezone: ${creator.preferred_timezone}`
+    );
 
     const participants = body.participants
+      ? await User.find({ _id: { $in: body.participants } }).select(
+          "preferred_timezone name"
+        )
+      : [];
+
+    const allUsers = [creator, ...participants];
+
+    const isWithinWorkingHours = (dateTime, timezone) => {
+      if (!timezone) {
+        console.error(`Invalid timezone for date: ${dateTime}`);
+        return false;
+      }
+
+      const localTime = DateTime.fromISO(dateTime, { zone: "utc" }).setZone(
+        timezone
+      );
+      const { hour, minute } = localTime;
+
+      return hour >= 9 && (hour < 17 || (hour === 17 && minute === 0));
+    };
+
+    const invalidUsers = allUsers
+      .map((user) => {
+        const startLocalTime = DateTime.fromISO(body.start).setZone(
+          user.preferred_timezone
+        );
+        const endLocalTime = DateTime.fromISO(body.end).setZone(
+          user.preferred_timezone
+        );
+
+        const startValid = isWithinWorkingHours(
+          body.start,
+          user.preferred_timezone
+        );
+        const endValid = isWithinWorkingHours(
+          body.end,
+          user.preferred_timezone
+        );
+
+        let reason = [];
+        if (!startValid)
+          reason.push(`Start (${startLocalTime.toFormat("HH:mm")})`);
+        if (!endValid) reason.push(`End (${endLocalTime.toFormat("HH:mm")})`);
+
+        return !startValid || !endValid
+          ? { user, reason: reason.join(" & ") }
+          : null;
+      })
+      .filter(Boolean);
+
+    if (invalidUsers.length > 0) {
+      return NextResponse.json(
+        {
+          message: `Appointment must be within working hours (09:00 - 17:00) for these users:\n${invalidUsers
+            .map(
+              ({ user, reason }) =>
+                `- ${user.name} (${user.preferred_timezone} UTC${DateTime.now()
+                  .setZone(user.preferred_timezone)
+                  .toFormat("ZZ")}) | Issue: ${reason}`
+            )
+            .join("\n")}`,
+        },
+        { status: 400 }
+      );
+    }
+
+    const startInUTC = DateTime.fromISO(body.start, {
+      zone: creator.preferred_timezone,
+    }).toUTC();
+    const endInUTC = DateTime.fromISO(body.end, {
+      zone: creator.preferred_timezone,
+    }).toUTC();
+
+    const participantIds = body.participants
       ? body.participants.map((id) =>
           mongoose.Types.ObjectId.createFromHexString(id)
         )
@@ -80,7 +156,7 @@ export async function POST(req) {
       start: startInUTC.toISO(),
       end: endInUTC.toISO(),
       creator_id: creatorId,
-      participants,
+      participants: participantIds,
     });
 
     return NextResponse.json({ appointment: newAppointment }, { status: 201 });

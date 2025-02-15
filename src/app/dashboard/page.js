@@ -21,7 +21,6 @@ export default function Dashboard() {
     const loginTime = localStorage.getItem("loginTime");
 
     if (!token || !loginTime) {
-      console.log("No token or login expired");
       handleLogout();
       return;
     }
@@ -30,15 +29,13 @@ export default function Dashboard() {
     const oneHour = 60 * 60 * 1000;
 
     if (now - parseInt(loginTime) > oneHour) {
-      console.log("Session expired");
       handleLogout();
     } else {
       try {
         const decodedToken = JSON.parse(atob(token.split(".")[1]));
-        console.log("Decoded Token:", decodedToken);
         setLoggedInUser(decodedToken.id);
       } catch (error) {
-        console.log("Error decoding token:", error);
+        alert(error.message);
         handleLogout();
       }
     }
@@ -127,8 +124,22 @@ export default function Dashboard() {
     }
 
     try {
+      // Konversi waktu input ke zona waktu creator
+      const startDateTime = DateTime.fromISO(newAppointment.start, {
+        zone: loggedInUserTimezone,
+      })
+        .toUTC()
+        .toISO();
+      const endDateTime = DateTime.fromISO(newAppointment.end, {
+        zone: loggedInUserTimezone,
+      })
+        .toUTC()
+        .toISO();
+
       const appointmentData = {
         ...newAppointment,
+        start: startDateTime,
+        end: endDateTime,
         creator_id: loggedInUser,
       };
 
@@ -140,12 +151,13 @@ export default function Dashboard() {
         body: JSON.stringify(appointmentData),
       });
 
-      if (!res.ok) throw new Error("Failed to add appointment");
-
       const data = await res.json();
+      if (!res.ok) throw new Error(data.error || data.message);
+
       const creatorData = users.find(
         (user) => String(user._id) === String(loggedInUser)
       );
+
       const participantData = data.appointment.participants.map(
         (participantId) => {
           return (
