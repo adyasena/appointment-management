@@ -17,7 +17,7 @@ export default function Navbar() {
   return (
     <nav className="bg-blue-600 text-white py-4 px-16">
       <div className="container mx-auto flex justify-between items-center">
-        <Link href="/" className="text-xl font-bold flex items-center gap-4">
+        <div className="text-xl font-bold flex items-center gap-4">
           <Image
             src="/logo.svg"
             alt="Logo"
@@ -28,7 +28,7 @@ export default function Navbar() {
           <span className="hidden md:block">
             User Appointment Management System
           </span>
-        </Link>
+        </div>
 
         <button
           className="md:hidden block text-white focus:outline-none"
