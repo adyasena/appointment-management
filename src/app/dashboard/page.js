@@ -124,7 +124,6 @@ export default function Dashboard() {
     }
 
     try {
-      // Konversi waktu input ke zona waktu creator
       const startDateTime = DateTime.fromISO(newAppointment.start, {
         zone: loggedInUserTimezone,
       })
@@ -210,35 +209,38 @@ export default function Dashboard() {
         </thead>
         <tbody>
           {appointments.length > 0 ? (
-            appointments.map((appointment) => {
-              const date = convertToUserTimezone(
-                appointment.start,
-                "d MMMM yyyy"
-              );
-              const startTime = convertToUserTimezone(
-                appointment.start,
-                "HH:mm"
-              );
-              const endTime = convertToUserTimezone(appointment.end, "HH:mm");
+            appointments
+              .sort((a, b) => new Date(a.start) - new Date(b.start))
+              .map((appointment) => {
+                const date = convertToUserTimezone(
+                  appointment.start,
+                  "d MMMM yyyy"
+                );
+                const startTime = convertToUserTimezone(
+                  appointment.start,
+                  "HH:mm"
+                );
+                const endTime = convertToUserTimezone(appointment.end, "HH:mm");
 
-              return (
-                <tr key={appointment._id} className="hover:bg-gray-100">
-                  <td className="border border-gray-300 p-2">
-                    {appointment.title}
-                  </td>
-                  <td className="border border-gray-300 p-2">
-                    {appointment.creator_id?.name || "Unknown"}
-                  </td>
-                  <td className="border border-gray-300 p-2">
-                    {appointment.participants?.map((p) => p.name).join(", ") ||
-                      "None"}
-                  </td>
-                  <td className="border border-gray-300 p-2">
-                    {`${date}, ${startTime} - ${endTime}`}
-                  </td>
-                </tr>
-              );
-            })
+                return (
+                  <tr key={appointment._id} className="hover:bg-gray-100">
+                    <td className="border border-gray-300 p-2">
+                      {appointment.title}
+                    </td>
+                    <td className="border border-gray-300 p-2">
+                      {appointment.creator_id?.name || "Unknown"}
+                    </td>
+                    <td className="border border-gray-300 p-2">
+                      {appointment.participants
+                        ?.map((p) => p.name)
+                        .join(", ") || "None"}
+                    </td>
+                    <td className="border border-gray-300 p-2">
+                      {`${date}, ${startTime} - ${endTime}`}
+                    </td>
+                  </tr>
+                );
+              })
           ) : (
             <tr>
               <td

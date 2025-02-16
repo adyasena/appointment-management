@@ -9,7 +9,7 @@ export default function AuthPage() {
   const [preferred_timezone, setTimezone] = useState("");
   const [sortedTimezones, setSortedTimezones] = useState([]);
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false); // ✅ State untuk loading
+  const [loading, setLoading] = useState(false);
 
   const getTimezones = () => {
     const timezones = Intl.supportedValuesOf("timeZone");
