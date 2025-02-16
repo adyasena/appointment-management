@@ -202,10 +202,10 @@ export default function Dashboard() {
       <table className="w-full border-collapse border border-gray-300 table-fixed">
         <thead>
           <tr className="bg-gray-200">
-            <th className="border border-gray-300 p-2 w-2/6">Title</th>
-            <th className="border border-gray-300 p-2 w-1/6">Creator</th>
-            <th className="border border-gray-300 p-2 w-1/6">Participants</th>
-            <th className="border border-gray-300 p-2 w-2/6">Time</th>
+            <th className="border border-gray-300 p-2 w-4/12">Title</th>
+            <th className="border border-gray-300 p-2 w-2/12">Creator</th>
+            <th className="border border-gray-300 p-2 w-3/12">Participants</th>
+            <th className="border border-gray-300 p-2 w-3/12">Time</th>
           </tr>
         </thead>
         <tbody>
