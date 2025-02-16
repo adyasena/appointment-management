@@ -16,7 +16,7 @@ export default function Navbar() {
 
   return (
     <nav className="bg-blue-600 text-white py-4 px-16">
-      <div className="container mx-auto flex justify-between items-center">
+      <div className="mx-auto flex justify-between items-center">
         <div className="text-xl font-bold flex items-center gap-4">
           <Image
             src="/logo.svg"
